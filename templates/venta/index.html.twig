@@ -1,0 +1,214 @@
+{% extends 'base.html.twig' %}
+
+{% block content %} 
+  
+  <div class="box box-success">
+      <div class="box-header">
+         <div class="row">
+              <div class="box-tittle col-sm-6 h3">
+                Listado de Ventas
+              </div>
+             <div class="col-sm-6"></div>
+          <div class="col-sm-2">
+            <div class="row h3">
+                         
+            </div>
+          </div>
+      </div>
+    </div>
+<div class="box-body">
+<table  class="table table-striped table-bordered dt-responsive nowrap" style="width:100%" id="listado-table">
+  <thead>
+    <tr>
+      <th >Codigo</th>
+      <th >Usuario</th>
+      <th >Total</th>
+       <th >Estado</th>  
+       <th> Forma Pago</th>
+      <th> Cuotas</th>
+      <th> Entrego</th>
+      <th >Fecha Venta</th>
+      <th> Acciones</th>
+      
+    </tr>
+  </thead>
+  <tbody> 
+   {% for venta in ventas %}
+    <tr>
+      <th >{{venta.id}}</th>
+      <td>{{venta.nombre}}</td>     
+      <td>{{venta.total}}</td>
+       <td>
+         {% if (venta.estado =="REALIZADA") %}
+          <span class="p-3 mb-2 bg-success text-white">Realizada</span>
+        {% elseif  (venta.estado =="PENDIENTE") %}
+             <span class="p-3 mb-2 bg-danger text-white">Pendiente</span>
+       {% endif %}
+       </td>         
+       {% if (venta.formaPago == 1) %}
+            <td> Efectivo </td>
+          {% endif %}
+        {% if  (venta.formaPago ==2) %}
+             <td> Tarjeta </td>
+          {% endif %}
+          {% if  (venta.formaPago ==3) %}
+             <td> Cuenta Corriente </td>
+          {% endif %}     
+      {% if (venta.cuotas != null) %}
+         <td>   {{venta.cuotas}}</td>
+        {% else %}
+        <td> - </td>
+        {% endif %}
+       
+         <td> {{venta.entrego }} </td>
+       
+      <td>{{venta.fechaventa|date("d/m/Y")}}</td>
+      <td> 
+        {% if (venta.estado =="PENDIENTE") %}
+         <button type="button" class="btn btn-primary" data-toggle="modal" onclick="realizarPago({{venta.id}},{{venta.total}},{{venta.cuotas}},{{venta.entrego}})">
+                Pagar
+              </button>
+          {% endif %}
+         {% if (venta.observaciones != null ) %}
+         <button type="button" class="btn btn-secondary" data-toggle="modal" onclick="verObservaciones({{venta.id}})">
+             <ion-icon name="eye-outline"></ion-icon>
+          </button>
+        {% endif %}
+
+      </td>
+   
+    </tr>
+       {% endfor %}
+  </tbody> 
+  
+</table>
+</div>
+
+
+ <!-- Modal Pago-->
+ <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Efectuar Pago</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">      
+      <p class="font-weight-bold" id="totalVenta"></p>
+      <p class="font-weight-bold" id="totalPagado"></p>
+      <p id="idVenta" style="none"></p>
+          <div class="form-group col-md-6">
+           <label for="cuotaN">Cuotas restantes</label>
+              <input type="number" class="form-control"  id="cuotaN" placeholder="numero de cuota">             
+          </div> 
+        <div class="form-group col-md-6"  id="divEntrega">
+                    <label for="entrega">Entrega:</label>
+                     <input type="number" class="form-control"  value="1" id="entrega" placeholder="entrega">
+         </div>  
+    
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="efectuarPago()">Guardar
+       <ion-icon name="reload-outline"  style="display:none;" id="loading"></ion-icon>
+
+        </button>
+      </div>
+    </div>
+  </div>
+  
+</div> 
+
+{# MODAL OBSERVACIONES #}
+<div class="modal" id="modalObservaciones" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Observaciones</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+         <p class="font-weight-bold" id="observaciones"></p>
+      </div>
+      <div class="modal-footer">
+      
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+{% endblock %}
+{% block doc_ready %}
+  <script type="text/javascript">  
+    $(document).ready(function ()
+   
+    {
+     $('#listado-table').DataTable({     
+       "scrollX": true,
+          'paging': true,
+           'searching': true,
+          'ordering': true,
+        
+                language: {
+                 "search": "Buscar:",
+                   "infoEmpty": "Mostrando 0 to 0 of 0 Entradas",
+                     "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+                        "zeroRecords": "Sin resultados encontrados",
+                        "loadingRecords": "Cargando...",
+                }
+     });
+
+ });
+ 
+  function realizarPago(id,total,cuotas,entrego){    
+     $('#idVenta').val(id)    
+     $('#totalVenta').text("TOTAL $: "+total)    
+     $('#totalPagado').text("Total Pagado$: "+entrego)  
+     $('#cuotaN').val(cuotas -1)
+     $('#modal').modal();
+   
+  } 
+ 
+  function efectuarPago(){
+     numCuota=$('#cuotaN').val()
+     entrega=$('#entrega').val() 
+            $('#loading').show()
+        $.ajax({
+                url: "{{path('realizarPago')}}",
+                type: 'POST',
+                dataType: 'json',
+                data: {id:$('#idVenta').val(),entrega: entrega,numCuota:numCuota },
+                success: function(data) {  
+                  $('#loading').hide()  
+                    location.reload();             
+                   $('#modal').modal('hide') 
+                }
+                  
+            });   
+   } 
+   function verObservaciones(id){ 
+      $('#observaciones').empty()  
+        $('#modalObservaciones').modal('show')
+        $.ajax({
+                url: "{{path('verObservaciones')}}",
+                type: 'POST',
+                dataType: 'json',
+                data: {id:id },
+                success: function(data) {  
+                   $('#observaciones').text(data.results)  
+                   
+                }
+                  
+            });   
+    }
+
+
+  </script>
+
+{% endblock %}
+
