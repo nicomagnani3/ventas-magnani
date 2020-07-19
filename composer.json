@@ -38,7 +38,12 @@
         "symfony/profiler-pack": "*",
         "symfony/test-pack": "*"
     },
-  
+    "require-dev": {
+        "symfony/debug-pack": "*",
+        "symfony/maker-bundle": "^1.19",
+        "symfony/profiler-pack": "*",
+        "symfony/test-pack": "*"
+    },
     "config": {
         "preferred-install": {
             "*": "dist"
